@@ -22,6 +22,9 @@
 
 #include <mutex>
 
+#include <boost/thread/thread.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 namespace ORB_SLAM3
 {
 
@@ -372,7 +375,7 @@ void Viewer::Run()
         {
             while(isStopped())
             {
-                usleep(3000);
+                boost::this_thread::sleep(boost::posix_time::microseconds(3000));
             }
         }
 

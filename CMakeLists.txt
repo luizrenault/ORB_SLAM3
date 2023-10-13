@@ -1,5 +1,35 @@
 cmake_minimum_required(VERSION 2.8)
+
+# This logic needs to be considered before project()
+set(_change_MSVC_flags FALSE)
+if(WIN32)
+  if(CMAKE_VERSION VERSION_LESS 3.15.0)
+    set(_change_MSVC_flags TRUE)
+  else()
+    # Set MSVC runtime to MultiThreaded (/MT)
+    cmake_policy(SET CMP0091 NEW)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  endif()
+endif()
+
 project(ORB_SLAM3)
+
+if(_change_MSVC_flags)
+  # Modify compile flags to change MSVC runtime from /MD to /MT
+  set(_re_match "([\\/\\-]M)D")
+  set(_re_replace "\\1T")
+  string(REGEX REPLACE ${_re_match} ${_re_replace}
+    CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  string(REGEX REPLACE ${_re_match} ${_re_replace}
+    CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+  string(REGEX REPLACE ${_re_match} ${_re_replace}
+    CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+  string(REGEX REPLACE ${_re_match} ${_re_replace}
+    CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL}")
+  string(REGEX REPLACE ${_re_match} ${_re_replace}
+    CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+endif()
+
 
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release)
@@ -12,20 +42,21 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
 
+
 # Check C++11 or C++0x support
 include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
    add_definitions(-DCOMPILEDWITHC11)
-   message(STATUS "Using flag -std=c++11.")
+   message(STATUS "Using flag -std=c++17.")
 elseif(COMPILER_SUPPORTS_CXX0X)
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
    add_definitions(-DCOMPILEDWITHC0X)
    message(STATUS "Using flag -std=c++0x.")
 else()
-   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++17 support. Please use a different C++ compiler.")
 endif()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
@@ -41,6 +72,11 @@ MESSAGE(${OpenCV_VERSION})
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(realsense2)
+find_package(Boost COMPONENTS serialization thread)
+find_package(OpenSSL)
+
+add_subdirectory(Thirdparty/g2o)
+add_subdirectory(Thirdparty/DBoW2)
 
 include_directories(
 ${PROJECT_SOURCE_DIR}
@@ -48,12 +84,13 @@ ${PROJECT_SOURCE_DIR}/include
 ${PROJECT_SOURCE_DIR}/include/CameraModels
 ${PROJECT_SOURCE_DIR}/Thirdparty/Sophus
 ${EIGEN3_INCLUDE_DIR}
+${g2o_SOURCE_DIR}
 ${Pangolin_INCLUDE_DIRS}
 )
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
-add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME} STATIC
 src/System.cc
 src/Tracking.cc
 src/LocalMapping.cc
@@ -113,16 +150,14 @@ include/SerializationUtils.h
 include/Config.h
 include/Settings.h)
 
-add_subdirectory(Thirdparty/g2o)
-
 target_link_libraries(${PROJECT_NAME}
 ${OpenCV_LIBS}
 ${EIGEN3_LIBS}
 ${Pangolin_LIBRARIES}
-${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
--lboost_serialization
--lcrypto
+${Boost_LIBRARIES}
+${OPENSSL_LIBRARIES}
+DBoW2
+g2o
 )
 
 # If RealSense SDK is found the library is added and its examples compiled
@@ -188,6 +223,10 @@ endif()
 
 #Monocular examples
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
+
+add_executable(mono_video
+        Examples/Monocular/mono_video.cc)
+target_link_libraries(mono_video ${PROJECT_NAME})
 
 add_executable(mono_tum
         Examples/Monocular/mono_tum.cc)

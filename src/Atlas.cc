@@ -23,6 +23,9 @@
 #include "Pinhole.h"
 #include "KannalaBrandt8.h"
 
+#include <boost/thread/thread.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 namespace ORB_SLAM3
 {
 
@@ -252,7 +255,7 @@ Map* Atlas::GetCurrentMap()
     if(!mpCurrentMap)
         CreateNewMap();
     while(mpCurrentMap->IsBad())
-        usleep(3000);
+        boost::this_thread::sleep(boost::posix_time::microseconds(3000));
 
     return mpCurrentMap;
 }

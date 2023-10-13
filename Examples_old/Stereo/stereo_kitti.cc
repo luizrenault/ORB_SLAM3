@@ -26,6 +26,9 @@
 
 #include<System.h>
 
+#include <boost/thread/thread.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 using namespace std;
 
 void LoadImages(const string &strPathToSequence, vector<string> &vstrImageLeft,
@@ -134,7 +137,7 @@ int main(int argc, char **argv)
             T = tframe-vTimestamps[ni-1];
 
         if(ttrack<T)
-            usleep((T-ttrack)*1e6);
+            boost::this_thread::sleep(boost::posix_time::microseconds((T - ttrack) * 1e6));
     }
 
     // Stop all threads

@@ -236,7 +236,7 @@ int main(int argc, char **argv)
                 T = tframe-vTimestampsCam[seq][ni-1];
 
             if(ttrack<T)
-                usleep((T-ttrack)*1e6); // 1e6
+                boost::this_thread::sleep(boost::posix_time::microseconds((T - ttrack) * 1e6));
         }
 
         if(seq < num_seq - 1)

@@ -19,13 +19,13 @@
 #ifndef ORB_SLAM3_OPTIMIZABLETYPES_H
 #define ORB_SLAM3_OPTIMIZABLETYPES_H
 
-#include "Thirdparty/g2o/g2o/core/base_unary_edge.h"
-#include <Thirdparty/g2o/g2o/types/types_six_dof_expmap.h>
-#include <Thirdparty/g2o/g2o/types/sim3.h>
+#include <g2o/core/base_unary_edge.h>
+#include <g2o/types/types_six_dof_expmap.h>
+#include <g2o/types/sim3.h>
 
 #include <Eigen/Geometry>
 #include <include/CameraModels/GeometricCamera.h>
-
+#include<Thirdparty/Sophus/sophus/types.hpp>
 
 namespace ORB_SLAM3 {
 class  EdgeSE3ProjectXYZOnlyPose: public  g2o::BaseUnaryEdge<2, Eigen::Vector2d, g2o::VertexSE3Expmap>{
@@ -157,7 +157,7 @@ public:
 
     virtual void oplusImpl(const double* update_)
     {
-        Eigen::Map<g2o::Vector7d> update(const_cast<double*>(update_));
+        Eigen::Map<Sophus::Vector7d> update(const_cast<double*>(update_));
 
         if (_fix_scale)
             update[6] = 0;

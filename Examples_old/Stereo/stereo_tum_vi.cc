@@ -22,8 +22,9 @@
 #include<fstream>
 #include<iomanip>
 #include<chrono>
-#include <unistd.h>
-
+//#include <unistd.h>
+#include <boost/thread/thread.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include<opencv2/core/core.hpp>
 
 #include<System.h>
@@ -186,7 +187,7 @@ int main(int argc, char **argv)
                 T = tframe-vTimestampsCam[seq][ni-1];
 
             if(ttrack<T)
-                usleep((T-ttrack)*1e6); // 1e6
+                boost::this_thread::sleep(boost::posix_time::microseconds((T - ttrack) * 1e6));
         }
         if(seq < num_seq - 1)
         {

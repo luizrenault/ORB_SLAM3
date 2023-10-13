@@ -32,6 +32,8 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace ORB_SLAM3
 {
@@ -278,7 +280,7 @@ Sophus::SE3f System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, 
             // Wait until Local Mapping has effectively stopped
             while(!mpLocalMapper->isStopped())
             {
-                usleep(1000);
+                boost::this_thread::sleep(boost::posix_time::microseconds(1000));
             }
 
             mpTracker->InformOnlyTracking(true);
@@ -353,7 +355,7 @@ Sophus::SE3f System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const
             // Wait until Local Mapping has effectively stopped
             while(!mpLocalMapper->isStopped())
             {
-                usleep(1000);
+                boost::this_thread::sleep(boost::posix_time::microseconds(1000));
             }
 
             mpTracker->InformOnlyTracking(true);
@@ -428,7 +430,7 @@ Sophus::SE3f System::TrackMonocular(const cv::Mat &im, const double &timestamp, 
             // Wait until Local Mapping has effectively stopped
             while(!mpLocalMapper->isStopped())
             {
-                usleep(1000);
+                boost::this_thread::sleep(boost::posix_time::microseconds(1000));
             }
 
             mpTracker->InformOnlyTracking(true);
